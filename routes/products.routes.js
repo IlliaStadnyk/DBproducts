@@ -2,76 +2,81 @@
 
 const express = require('express');
 const router = express.Router();
-const {ObjectId} = require("mongodb");
+const Product = require("../models/product.model.js");
 
-router.get('/products', (req, res) => {
-  req.db.collection('products')
-      .find()
-      .toArray()
-      .then((data) => {
-        res.json(data);
-      })
-      .catch((err) => {
-        res.status(500).json({ message: err });
-      });
+router.get('/products', async (req, res) => {
+  try {
+      res.json(await Product.find())
+  }
+  catch (error) {
+      res.status(500).json(error);
+  }
 });
 
-router.get('/products/random', (req, res) => {
-  req.db.collection('products')
-      .aggregate([{ $sample: { size: 1 } }])
-      .toArray()
-      .then((data) => {
-        res.json(data[0]);
-      })
-      .catch((err) => {
-        res.status(500).json({ message: err });
-      });
+router.get('/products/random', async (req, res) => {
+  try {
+      const count = await Product.countDocuments();
+      const rand = Math.floor(Math.random() * count);
+      const product = await Product.findOne().skip(rand);
+
+      if(!product) res.status(404).json({ message: 'Not found' });
+      else res.json(product);
+  }
+  catch (error) {
+      res.status(500).json(error);
+  }
 });
 
-router.get('/products/:id', (req, res) => {
-  req.db.collection('products')
-      .findOne({ _id: new ObjectId(req.params.id) })
-      .then((data) => {
-        if(!data) res.status(404).json({ message: 'Not found' });
-        else res.json(data);
-      })
-      .catch((err) => {
-        res.status(500).json({ message: err });
-      });});
-
-router.post('/products', (req, res) => {
-  const { name, client } = req.body;
-  req.db.collection('products')
-      .insertOne({name: name, client: client})
-      .then(()=>{
-        res.status(201).json({message:"Successfully added"});
-      })
-      .catch((err) => {
-        res.status(500).json({ message: err });
-      })
+router.get('/products/:id', async (req, res) => {
+  try {
+      const product = await Product.findById(req.params.id);
+      if(!product) res.status(404).json({ message: 'Not found' });
+      else res.json(product);
+  }
+  catch (error) {
+      res.status(500).json(error);
+  }
 });
 
-router.put('/products/:id', (req, res) => {
-  const { name, client } = req.body;
-  req.db.collection('products')
-      .updateOne({ _id: new ObjectId(req.params.id) }, {$set: { name: name, client: client } })
-      .then(() => {
-        res.json({ message: 'OK' });
-      })
-      .catch((err) => {
-        res.status(500).json({ message: err });
-      });
+router.post('/products', async (req, res) => {
+  try {
+      const { name, client } = req.body;
+      const newProduct = new Product(name, client);
+      newProduct.save();
+      res.json({message: 'Product added successfully.'});
+  }
+  catch (error) {
+      res.status(500).json(error);
+  }
 });
 
-router.delete('/products/:id', (req, res) => {
-  req.db.collection('products')
-      .deleteOne({ _id: new ObjectId(req.params.id) })
-      .then(() => {
-        res.json({ message: 'OK' });
-      })
-      .catch((err) => {
-        res.status(500).json({ message: err });
-      })
+router.put('/products/:id', async (req, res) => {
+  try {
+    const { name, client } = req.body;
+    const product = await Product.findById(req.params.id);
+    if(product){
+        await Product.updateOne({ _id: req.params.id }, { $set: { name, client }});
+        res.json({message: 'Product updated successfully.'});
+    }
+    else res.json({message: 'Product not found'});
+  }
+  catch (error) {
+      res.status(500).json(error);
+  }
+});
+
+router.delete('/products/:id', async (req, res) => {
+  try {
+      const product = await Product.findById(req.params.id);
+      if(product){
+          product.remove();
+          res.json({message: 'Product deleted successfully.'});
+      }
+      else res.json({message: 'Product not found'});
+  }
+  catch (error) {
+      res.status(500).json(error);
+  }
 });
 
 module.exports = router;

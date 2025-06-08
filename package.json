@@ -1,15 +1,16 @@
 {
-  "name": "ComapnyApp",
+  "name": "comapny-app",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js.js",
   "license": "MIT",
   "scripts": {
     "start": "nodemon server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.17.1",
+    "express": "^5.1.0",
     "mongodb": "^6.17.0",
+    "mongoose": "^8.15.1",
     "nodemon": "^1.19.1"
   }
 }
