@@ -49,10 +49,10 @@ exports.UpdateDepartment = async (req, res) => {
     const { name } = req.body;
 
     try {
-        const dep = await Department.findById(req.params.id);
-        if(dep) {
-            const updated = await Department.findByIdAndUpdate(req.params.id, { $set: { name: name }}, {new: true});
-            res.json(updated);
+        const updated = await Department.findByIdAndUpdate();
+
+        if (updated) {
+            res.json()
         }
         else res.status(404).json({ message: 'Not found...' });
     }
